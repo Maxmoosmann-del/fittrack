@@ -65,3 +65,18 @@ Die PNGs im Hauptordner (192, 512, maskable 512, Favicon 64) werden daraus im Br
 behält die installierte App die alten Icons.
 Auf Android werden Icons einer bereits installierten PWA oft erst nach einiger Zeit
 oder nach Neuinstallation aktualisiert.
+
+## Produktkatalog
+
+`data/catalog-de.json` enthält die beliebtesten in Deutschland verkauften Supermarktprodukte
+mit vollständigen, plausiblen Nährwerten (offline durchsuchbar in „Essen“ und beim Eintragen).
+`data/KATALOG.md` ist dieselbe Liste zum Lesen. Neu bauen (braucht Internet, dauert einige
+Minuten wegen des Abfragelimits):
+
+```bash
+node tools/build-catalog.mjs 2500
+```
+
+Was nicht im Katalog ist, findet die Online-Suche (Knopf unter den Treffern).
+Daten: © Open Food Facts contributors, Lizenz [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/).
+Die Katalogdatei steht als abgeleitete Datenbank ebenfalls unter ODbL.

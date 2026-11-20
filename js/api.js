@@ -1,5 +1,6 @@
 // Externe Dienste: OpenFoodFacts (Barcode) und Google Gemini (Foto-Analyse).
 import { round1, validateNonNegativeFloat, validatePositiveInt } from './util.js';
+import { parseCatalogProduct, dedupeCatalog } from './catalog.js';
 
 // Ohne Timeout dreht sich der Spinner bei schlechtem Netz endlos.
 export async function fetchWithTimeout(url, options = {}, timeoutMs = 20000) {
@@ -36,6 +37,25 @@ export async function lookupBarcode(barcode) {
     `https://world.openfoodfacts.org/api/v0/product/${encodeURIComponent(barcode)}.json`);
   if (!res.ok) throw new Error('Netzwerkfehler');
   return parseOffProduct(await res.json());
+}
+
+// Volltextsuche in Open Food Facts, auf in Deutschland verkaufte Produkte beschränkt,
+// beliebteste zuerst. Nur auf Knopfdruck (OFF erlaubt ~10 Suchen pro Minute).
+// (Die neuere search.openfoodfacts.org erlaubt keine Browser-Anfragen/CORS – daher search.pl.)
+export async function searchOnline(query) {
+  const terms = query.trim();
+  if (!terms) return [];
+  const params = new URLSearchParams({
+    search_terms: terms, search_simple: '1', action: 'process', json: '1', page_size: '40',
+    sort_by: 'unique_scans_n', tagtype_0: 'countries', tag_contains_0: 'contains', tag_0: 'germany',
+    fields: 'code,product_name_de,product_name,brands,stores_tags,nutriments'
+  });
+  const res = await fetchWithTimeout(`https://world.openfoodfacts.org/cgi/search.pl?${params}`, {}, 25000);
+  if (res.status === 429) throw new Error('Zu viele Suchen – kurz warten');
+  if (res.status >= 500) throw new Error('Open Food Facts gerade überlastet');
+  if (!res.ok) throw new Error('Open Food Facts nicht erreichbar');
+  const data = await res.json();
+  return dedupeCatalog((data.products || []).map(parseCatalogProduct).filter(Boolean)).slice(0, 25);
 }
 
 // ---------- Gemini ----------

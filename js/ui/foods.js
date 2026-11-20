@@ -2,6 +2,8 @@
 import { db, save, findById, removeById } from '../store.js';
 import { uid, round1, validateNonNegativeFloat } from '../util.js';
 import { MEALS, nutrientSnapshot } from '../nutrition.js';
+import { loadCatalog, searchCatalog, catalogLabel } from '../catalog.js';
+import { searchOnline } from '../api.js';
 import { $, el, ICONS, toast, showFieldError, openModal, closeModal, isModalOpen } from './dom.js';
 import { register, render } from './render.js';
 
@@ -12,22 +14,85 @@ function foodMeta(f) {
   return el('div', { class: 'meta' }, macroLine(f) + ' ', el('span', { class: 'tag', text: '/100g' }));
 }
 
+// ---------- Katalog (Supermarktprodukte, offline) + Online-Suche ----------
+
+// Katalogprodukt in die eigenen Lebensmittel übernehmen. Schon vorhanden (gleicher
+// Barcode)? Dann das eigene nehmen – evtl. selbst korrigierte Werte bleiben erhalten.
+function adoptProduct(it) {
+  const existing = db.foods.find(f => f.barcode === it.code);
+  if (existing) return existing;
+  const food = { id: uid(), name: catalogLabel(it), kcal: it.kcal, protein: it.protein,
+                 carbs: it.carbs, fat: it.fat, barcode: it.code };
+  db.foods.push(food);
+  save('foods');
+  return food;
+}
+
+function productRow(it, tagText, onPick) {
+  const stores = it.stores?.length ? ` · ${it.stores.join('/')}` : '';
+  return el('div', { class: 'food-row clickable', onclick: () => onPick(it) },
+    el('div', {},
+      el('div', { class: 'name', text: catalogLabel(it) }),
+      el('div', { class: 'meta' }, `${macroLine(it)}${stores} `, el('span', { class: 'tag', text: '/100g' }))),
+    el('span', { class: 'tag source-tag', text: tagText }));
+}
+
+// Katalog-Treffer, die man nicht schon als eigenes Lebensmittel hat
+async function catalogHits(q, limit) {
+  const own = new Set(db.foods.map(f => f.barcode).filter(Boolean));
+  return searchCatalog(await loadCatalog(), q, limit + own.size).filter(it => !own.has(it.code)).slice(0, limit);
+}
+
+function onlineButton(q, target, onPick) {
+  const btn = el('button', { class: 'btn-line', type: 'button', text: `⌕ „${q}“ online suchen (Open Food Facts)` });
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    btn.textContent = 'Suche läuft…';
+    try {
+      const found = await searchOnline(q);
+      const own = new Set(db.foods.map(f => f.barcode).filter(Boolean));
+      const rows = found.filter(it => !own.has(it.code)).map(it => productRow(it, 'ONLINE', onPick));
+      btn.replaceWith(el('h2', { class: 'sec' }, '// Online', el('span', { class: 'sec-meta', text: String(rows.length) })),
+        ...(rows.length ? rows : [el('div', { class: 'empty', text: 'Online nichts gefunden. Lege es mit + selbst an oder scanne den Barcode.' })]));
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = `⌕ Erneut versuchen – ${err.message}`;
+    }
+  });
+  target.append(btn);
+}
+
 // ---------- Liste ----------
+let foodsRenderSeq = 0;
 function renderFoods() {
   const q = $('#foodSearch').value.trim().toLowerCase();
   const list = db.foods.filter(f => !q || f.name.toLowerCase().includes(q)).sort(byName);
   $('#foodCount').textContent = db.foods.length;
   $('#foodsMeta').textContent = q ? `${list.length} Treffer` : String(list.length);
-  if (list.length === 0) {
-    $('#foodsList').replaceChildren(el('div', { class: 'empty', html: q
-      ? 'Keine Treffer. Mit <b>+</b> legst du es neu an.' : 'Noch keine Lebensmittel. Tippe auf <b>+</b>.' }));
-    return;
-  }
-  $('#foodsList').replaceChildren(...list.map(f => el('div', { class: 'food-row' },
+  const box = $('#foodsList');
+  box.replaceChildren(...(list.length ? list.map(f => el('div', { class: 'food-row' },
     el('div', {}, el('div', { class: 'name', text: f.name }), foodMeta(f)),
     el('div', { class: 'actions' },
       el('button', { type: 'button', 'aria-label': `${f.name} bearbeiten`,
-                     html: ICONS.edit.replace(/14/g, '16'), onclick: () => openEditFood(f) })))));
+                     html: ICONS.edit.replace(/14/g, '16'), onclick: () => openEditFood(f) }))))
+    : [el('div', { class: 'empty', html: q ? 'Nicht in deiner Liste.' : 'Noch keine Lebensmittel. Tippe auf <b>+</b>.' })]));
+
+  // Katalog asynchron anhängen (erste Suche lädt die Datei einmalig)
+  const seq = ++foodsRenderSeq;
+  const pick = it => { const f = adoptProduct(it); renderFoods(); toast(`${f.name} übernommen`); };
+  (async () => {
+    if (!q) {
+      const n = (await loadCatalog()).length;
+      if (seq === foodsRenderSeq && n) box.append(el('div', { class: 'hint catalog-hint',
+        text: `+ ${n} Supermarktprodukte im Katalog – oben suchen, antippen übernimmt sie.` }));
+      return;
+    }
+    const hits = await catalogHits(q, 30);
+    if (seq !== foodsRenderSeq) return;            // inzwischen weitergetippt
+    if (hits.length) box.append(el('h2', { class: 'sec' }, '// Katalog', el('span', { class: 'sec-meta', text: String(hits.length) })),
+                                ...hits.map(it => productRow(it, 'KATALOG', pick)));
+    if (q.length >= 3) onlineButton(q, box, pick);
+  })();
 }
 
 // ---------- Lebensmittel anlegen / bearbeiten ----------
@@ -109,18 +174,28 @@ export function openLogFood(meal) {
 
 export function getActiveMeal() { return activeMeal; }
 
+let logRenderSeq = 0;
 function renderLogFoodResults() {
   const q = $('#logFoodSearch').value.trim().toLowerCase();
   const list = db.foods.filter(f => !q || f.name.toLowerCase().includes(q)).sort(byName);
-  if (list.length === 0) {
-    $('#logFoodResults').replaceChildren(el('div', { class: 'empty', text: 'Keine Treffer. Du kannst unten ein neues Lebensmittel anlegen.' }));
-    return;
-  }
+  const box = $('#logFoodResults');
   // Ganze Zeile antippbar (auf dem Handy tippt man meist auf den Namen)
-  $('#logFoodResults').replaceChildren(...list.slice(0, 40).map(f => el('div', { class: 'food-row clickable', onclick: () => openPortion(f) },
+  box.replaceChildren(...(list.length ? list.slice(0, 40).map(f => el('div', { class: 'food-row clickable', onclick: () => openPortion(f) },
     el('div', {}, el('div', { class: 'name', text: f.name }), foodMeta(f)),
     el('button', { class: 'icon-btn', type: 'button', 'aria-label': `${f.name} auswählen`,
-                   html: ICONS.chevron, onclick: ev => { ev.stopPropagation(); openPortion(f); } }))));
+                   html: ICONS.chevron, onclick: ev => { ev.stopPropagation(); openPortion(f); } })))
+    : [el('div', { class: 'empty', text: q ? 'Nicht in deiner Liste.' : 'Noch keine Lebensmittel.' })]));
+  if (!q) return;
+
+  const seq = ++logRenderSeq;
+  const pick = it => openPortion(adoptProduct(it));
+  (async () => {
+    const hits = await catalogHits(q, 25);
+    if (seq !== logRenderSeq) return;
+    if (hits.length) box.append(el('h2', { class: 'sec' }, '// Katalog', el('span', { class: 'sec-meta', text: String(hits.length) })),
+                                ...hits.map(it => productRow(it, 'KATALOG', pick)));
+    if (q.length >= 3) onlineButton(q, box, pick);
+  })();
 }
 
 // ---------- Portion ----------
