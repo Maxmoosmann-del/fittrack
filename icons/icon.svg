@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512">
+  <!-- FitTrack App-Icon: Hantel in Schwarz auf Karmin, Warnstreifen, Scanlines.
+       Quelle für icon-192.png und icon-512.png (siehe README). -->
+  <defs>
+    <pattern id="scan" width="2" height="2" patternUnits="userSpaceOnUse">
+      <rect width="2" height="0.7" fill="#000" opacity=".3"/>
+    </pattern>
+    <pattern id="hazard" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="5" height="10" fill="#ff2a55"/>
+    </pattern>
+  </defs>
+  <rect width="100" height="100" fill="#ff2a55"/>
+  <path fill="#040203" d="M14 34h10v28h-10zM26 26h10v44h-10zM36 43h28v10h-28zM64 26h10v44h-10zM76 34h10v28h-10z"/>
+  <rect y="82" width="100" height="18" fill="#040203"/>
+  <rect y="86" width="100" height="10" fill="url(#hazard)"/>
+  <rect width="100" height="100" fill="url(#scan)"/>
+</svg>

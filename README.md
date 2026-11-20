@@ -54,3 +54,12 @@ und fällt sonst auf den Cache zurück.
 Braucht einen eigenen Gemini-API-Key (Einstellungen). Das Modell ist dort ebenfalls
 einstellbar; Standard ist der Alias `gemini-flash-latest`, damit Abschaltungen
 einzelner Modellversionen die App nicht kaputt machen.
+
+## Icons
+
+Quellen liegen in `icons/` als SVG (`icon.svg`, `icon-maskable.svg`, `favicon.svg`).
+Die PNGs im Hauptordner (192, 512, maskable 512, Favicon 64) werden daraus im Browser
+über ein Canvas gerendert. Nach dem Austausch `CACHE` in `sw.js` hochzählen, sonst
+behält die installierte App die alten Icons.
+Auf Android werden Icons einer bereits installierten PWA oft erst nach einiger Zeit
+oder nach Neuinstallation aktualisiert.
