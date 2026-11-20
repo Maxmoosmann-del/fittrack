@@ -31,6 +31,28 @@ export function fmtSubDate(s) {
   return fromStr(s).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+// Kalenderwoche nach ISO 8601 (Woche mit dem ersten Donnerstag = KW 1)
+export function isoWeek(s) {
+  const d = fromStr(s);
+  d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));       // Donnerstag dieser Woche
+  const jan4 = new Date(d.getFullYear(), 0, 4);
+  return 1 + Math.round(((d - jan4) / 86400000 - 3 + ((jan4.getDay() + 6) % 7)) / 7);
+}
+
+// "FR 20.11.2026"
+export function fmtShortDate(s) {
+  const d = fromStr(s);
+  const wd = d.toLocaleDateString('de-DE', { weekday: 'short' }).replace('.', '').toUpperCase();
+  return `${wd} ${fmtSubDate(s)}`;
+}
+
+// Text-Fortschrittsbalken: "████████▒▒▒▒" – über dem Ziel komplett gefüllt
+export function asciiBar(value, goal, width = 20) {
+  const ratio = goal > 0 ? Math.max(0, value / goal) : 0;
+  const filled = Math.min(width, Math.round(ratio * width));
+  return '█'.repeat(filled) + '▒'.repeat(width - filled);
+}
+
 export function daysBetween(a, b) {
   return Math.round((fromStr(b) - fromStr(a)) / 86400000);
 }

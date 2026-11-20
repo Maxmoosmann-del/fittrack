@@ -86,3 +86,23 @@ test('parseGeminiJson: Markdown-Zäune, ungültige Zahlen, kein JSON', () => {
   assert.deepEqual(r, { name: 'Pasta', kcal: 650, protein: 0, carbs: 80, fat: 20, grams: 400 });
   assert.throws(() => parseGeminiJson('Sorry, kein Essen erkannt'), /Keine Nährwerte/);
 });
+
+import { isoWeek, asciiBar, fmtShortDate } from '../js/util.js';
+
+test('isoWeek nach ISO 8601, auch an Jahresgrenzen', () => {
+  assert.equal(isoWeek('2026-11-20'), 47);
+  assert.equal(isoWeek('2026-01-01'), 1);    // Donnerstag
+  assert.equal(isoWeek('2027-01-01'), 53);   // Freitag gehört noch zu KW 53/2026
+  assert.equal(isoWeek('2024-12-30'), 1);    // Montag gehört schon zu KW 1/2025
+});
+
+test('asciiBar: Füllstand, Überlauf, Ziel 0', () => {
+  assert.equal(asciiBar(50, 100, 10), '█████▒▒▒▒▒');
+  assert.equal(asciiBar(300, 100, 4), '████');
+  assert.equal(asciiBar(10, 0, 4), '▒▒▒▒');
+  assert.equal(asciiBar(-5, 100, 4), '▒▒▒▒');
+});
+
+test('fmtShortDate', () => {
+  assert.equal(fmtShortDate('2026-11-20'), 'FR 20.11.2026');
+});

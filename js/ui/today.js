@@ -1,20 +1,15 @@
 // Tab "Heute": Kalorien/Makros, Mahlzeiten, Wasser, Gewohnheiten.
 import { db, save, removeById } from '../store.js';
-import { fmtDate, fmtSubDate } from '../util.js';
 import { MEALS, calcEntry, dayTotals, effectiveKcalGoal } from '../nutrition.js';
 import { habitStreak, toggleHabit } from '../habits.js';
 import { $, el, ICONS, toast, setBar } from './dom.js';
 import { register, render } from './render.js';
+import { renderHeader } from './header.js';
 import { openLogFood, openPortionEdit } from './foods.js';
-
-export function renderDateHeader() {
-  $('#dateLabel').textContent = fmtDate(db.state.date);
-  $('#dateSub').textContent = fmtSubDate(db.state.date);
-}
 
 function renderToday() {
   const day = db.state.date;
-  renderDateHeader();
+  renderHeader();
 
   const entries = db.log[day] || [];
   const totals = dayTotals(entries);
@@ -23,12 +18,12 @@ function renderToday() {
   $('#kcalNum').textContent = totals.kcal;
   $('#kcalGoal').textContent = goal;
   $('#kcalLeft').textContent = Math.max(goal - totals.kcal, 0);
-  setBar('kcalBar', totals.kcal, goal);
+  setBar('kcalBar', totals.kcal, goal, { percent: true });
 
   const burnedRow = $('#cardioBurnedRow');
   const showBurned = burned > 0 && db.appSettings.cardioAddToBudget;
-  burnedRow.style.display = showBurned ? 'flex' : 'none';
-  if (showBurned) $('#cardioBurnedText').textContent = `${burned} kcal verbrannt → ${goal} kcal Tagesbedarf`;
+  burnedRow.style.display = showBurned ? 'block' : 'none';
+  if (showBurned) $('#cardioBurnedText').textContent = `${burned} kcal verbrannt → ziel ${goal}`;
 
   for (const m of ['protein', 'carbs', 'fat']) {
     $(`#${m}Num`).textContent = totals[m];
@@ -40,9 +35,7 @@ function renderToday() {
     const mealEntries = entries.filter(e => e.meal === m.key);
     const kcal = mealEntries.reduce((s, e) => s + calcEntry(e).kcal, 0);
     return el('div', { class: 'meal' },
-      el('div', { class: 'meal-head' },
-        el('div', { class: 'title', text: m.label }),
-        el('div', { class: 'kcal', text: `${kcal} kcal` })),
+      el('h2', { class: 'sec' }, `// ${m.label}`, el('span', { class: 'sec-meta', text: `${kcal} kcal` })),
       el('div', { class: 'entries' }, mealEntries.map(e => mealEntryRow(e, day, m.label))),
       el('button', { class: 'add-btn', type: 'button', 'aria-label': `${m.label} hinzufügen`,
                      text: '+ Hinzufügen', onclick: () => openLogFood(m.key) }));
@@ -77,36 +70,27 @@ function renderWater() {
   const size = db.appSettings.waterGlassSize || 250;
   const drunk = db.water[db.state.date] || 0;
 
+  // Gläser als ASCII-Kästchen: ■ voll, □ leer
   const glasses = [];
   for (let i = 0; i < goal; i++) {
     const filled = i < drunk;
     glasses.push(el('button', {
       class: 'glass-btn' + (filled ? ' filled' : ''), type: 'button', dataset: { idx: i },
       'aria-label': `Glas ${i + 1}${filled ? ' (gefüllt)' : ''}`, 'aria-pressed': String(filled),
-      html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3l1 16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-16Z"/>${filled ? '<path d="M6 10l.5 9a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2l.5-9Z" stroke="none" fill="currentColor" opacity="0.35"/>' : ''}</svg>`
     }));
   }
-  const bar = el('span');
-  bar.style.width = Math.min(100, drunk / goal * 100) + '%';
-  const reset = el('button', { class: 'water-reset-btn', type: 'button', 'data-action': 'reset',
-                               'aria-label': 'Wasser zurücksetzen', text: '↺' });
-  if (drunk === 0) reset.style.display = 'none';
-
+  $('#waterMeta').textContent = `${drunk}/${goal} · ${drunk * size} ml`;
   $('#waterTracker').replaceChildren(
-    el('div', { class: 'water-header' },
-      el('div', {},
-        el('div', { class: 'water-count' }, String(drunk), el('span', { class: 'water-unit', text: ` / ${goal} Gläser` })),
-        el('div', { class: 'water-ml', text: `${drunk * size} ml` })),
-      reset),
-    el('div', { class: 'glass-grid' }, glasses),
-    el('div', { class: 'water-progress-bar' }, bar));
+    el('div', { class: 'water-row' }, glasses,
+      drunk > 0 && el('button', { class: 'water-reset-btn', type: 'button', 'data-action': 'reset',
+                                  'aria-label': 'Wasser zurücksetzen', text: '↺' })));
 }
 
 // ---------- Gewohnheiten ----------
 function renderHabits() {
   const box = $('#habitTracker');
   if (db.habits.length === 0) {
-    box.replaceChildren(el('div', { class: 'empty', text: 'Noch keine Gewohnheiten. Füge sie in den Einstellungen hinzu.' }));
+    box.replaceChildren(el('div', { class: 'empty', text: 'Lege bis zu drei Gewohnheiten in den Einstellungen an.' }));
     return;
   }
   const done = db.habitLog[db.state.date] || {};
@@ -121,8 +105,10 @@ function renderHabits() {
       el('div', { class: 'habit-info' },
         el('div', { class: 'habit-name', text: h.name }),
         streak > 0
-          ? el('div', { class: 'habit-streak', text: `🔥 ${streak} Tag${streak === 1 ? '' : 'e'}` })
-          : el('div', { class: 'habit-streak muted', text: 'Noch kein Streak' })));
+          ? el('div', { class: 'habit-streak', text: `▲ ${streak}`,
+                        title: `${streak} Tag${streak === 1 ? '' : 'e'} in Folge`,
+                        'aria-label': `${streak} Tag${streak === 1 ? '' : 'e'} in Folge` })
+          : el('div', { class: 'habit-streak muted', text: '—', 'aria-label': 'Noch kein Streak' })));
   }));
 }
 

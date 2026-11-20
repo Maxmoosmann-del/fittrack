@@ -4,7 +4,7 @@ import { uid, fmtDate, fmtSubDate, toNumber, validatePositiveInt, validateNonNeg
 import { PRESET_CARDIO, CUSTOM_CARDIO_MET, calcCardioKcal } from '../nutrition.js';
 import { $, el, toast, showFieldError, openModal, closeModal } from './dom.js';
 import { register, render } from './render.js';
-import { renderDateHeader } from './today.js';
+import { renderHeader } from './header.js';
 
 // ---------- Übungen ----------
 function setField(dateKey, id, key, value) {
@@ -19,21 +19,20 @@ function numberField(label, value, aria, inputMode, onChange) {
   const inp = el('input', { type: 'number', inputmode: inputMode, min: '0', placeholder: '0', 'aria-label': aria });
   inp.value = value || '';
   inp.addEventListener('change', e => onChange(toNumber(e.target.value) || 0));
-  return el('div', { class: 'field' }, el('label', { text: label }), inp);
+  return el('label', { class: 'ex-field' }, el('span', { text: label, 'aria-hidden': 'true' }), inp);
 }
 
 function exerciseCard(ex, dateKey) {
   const s = ex.sets[0] || { weight: 0, reps: 0 };
-  const row = el('div', { class: 'grid-2' },
-    numberField('Gewicht (kg)', s.weight, `${ex.exercise} Gewicht in kg`, 'decimal',
+  const row = el('div', { class: 'ex-inputs' },
+    numberField('KG', s.weight, `${ex.exercise} Gewicht in kg`, 'decimal',
                 v => setField(dateKey, ex.id, 'weight', v)),
-    numberField('Wiederholungen', s.reps, `${ex.exercise} Wiederholungen`, 'numeric',
+    numberField('WDH', s.reps, `${ex.exercise} Wiederholungen`, 'numeric',
                 v => setField(dateKey, ex.id, 'reps', Math.round(v))));
-  row.style.marginTop = '10px';
   return el('div', { class: 'workout-card' },
     el('div', { class: 'ex-title' },
       el('span', { text: ex.exercise }),
-      el('button', { class: 'text-btn', type: 'button', text: 'Entfernen', 'aria-label': `${ex.exercise} entfernen`,
+      el('button', { class: 'ex-remove', type: 'button', text: '✕', 'aria-label': `${ex.exercise} entfernen`,
                      onclick: () => {
                        const r = removeById(db.workouts, dateKey, ex.id);
                        if (!r) return;
@@ -52,7 +51,7 @@ function historyItem(d) {
         el('span', { class: 'muted', style: 'font-weight:400', text: `· ${fmtSubDate(d)}` })),
       el('button', { class: 'text-btn', type: 'button', text: 'Öffnen', 'aria-label': `${fmtDate(d)} Workout öffnen`,
                      onclick: () => { db.state.date = d; save('state'); render('current'); } })),
-    el('div', { class: 'summary', text: `${day.length} Übung${day.length !== 1 ? 'en' : ''} · ${totalSets} Sätze` }),
+    el('div', { class: 'summary', text: `${day.length} Übung${day.length !== 1 ? 'en' : ''} · ${totalSets} ${totalSets === 1 ? 'Satz' : 'Sätze'}` }),
     el('div', { class: 'ex-list' }, day.map(ex => el('div', { class: 'ex' },
       el('b', { text: ex.exercise }),
       ` — ${ex.sets.map(s => `${s.weight || 0}kg × ${s.reps || 0}`).join(', ')}`))));
@@ -60,13 +59,15 @@ function historyItem(d) {
 
 function renderWorkouts() {
   const dateKey = db.state.date;
-  renderDateHeader();
-  $('#todayWorkoutTitle').textContent = fmtDate(dateKey);
+  renderHeader();
 
   const day = db.workouts[dateKey] || [];
+  const cardioCount = (db.cardio[dateKey] || []).length;
+  $('#sessionSummary').textContent =
+    `${day.length} übung${day.length === 1 ? '' : 'en'} · ${cardioCount} cardio`;
   $('#exercisesList').replaceChildren(...(day.length
     ? day.map(ex => exerciseCard(ex, dateKey))
-    : [el('div', { class: 'empty', html: 'Noch keine Übungen heute. Tippe oben auf <b>+</b>.' })]));
+    : [el('div', { class: 'empty', html: 'Noch keine Übungen an diesem Tag. Tippe auf <b>+</b>.' })]));
 
   renderCardioList();
 
@@ -86,7 +87,7 @@ function lastExerciseValues(name) {
   return null;
 }
 
-function openExerciseModal() {
+export function openExerciseModal() {
   for (const id of ['#exerciseName', '#exerciseWeight', '#exerciseReps']) $(id).value = '';
   $('#lastExerciseInfo').style.display = 'none';
   $('#exerciseHints').replaceChildren(...db.exerciseNames.map(n => el('option', { value: n })));
@@ -127,7 +128,7 @@ function renderCardioList() {
     el('div', { class: 'left' },
       el('div', { class: 'name', text: e.name }),
       el('div', { class: 'meta' },
-        el('span', { class: `intensity ${e.intensity.replace(' ', '-')}`, text: e.intensity }),
+        el('span', { class: `intensity ${e.intensity.replace(' ', '-')}`, text: `[${e.intensity}]` }),
         ` · ${e.duration} min`)),
     el('div', { class: 'right' },
       el('div', { class: 'kcal-burned', text: `${e.kcalBurned} kcal` }),
@@ -182,7 +183,6 @@ function confirmCardio() {
 }
 
 export function initWorkouts() {
-  $('#addExerciseBtn').addEventListener('click', openExerciseModal);
   $('#exerciseName').addEventListener('input', onExerciseNameInput);
   $('#cancelExercise').addEventListener('click', () => closeModal('exerciseModal'));
   $('#confirmExercise').addEventListener('click', confirmExercise);

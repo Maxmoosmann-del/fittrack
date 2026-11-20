@@ -1,4 +1,5 @@
 // DOM-Helfer: Selektoren, Element-Bau, Toast, Modals, Balken.
+import { asciiBar } from '../util.js';
 
 export const $ = sel => document.querySelector(sel);
 export const $$ = sel => document.querySelectorAll(sel);
@@ -104,14 +105,14 @@ export function initModals() {
   });
 }
 
-// Balkenbreite + ARIA-Werte; goal<=0 ergibt 0 % statt NaN %.
-export function setBar(barId, value, goal) {
+// ASCII-Balken + ARIA-Werte. Breite in Zeichen kommt aus data-width.
+export function setBar(barId, value, goal, { percent = false } = {}) {
   const bar = document.getElementById(barId);
-  bar.style.width = (goal > 0 ? Math.min(100, value / goal * 100) : 0) + '%';
-  const wrap = bar.parentElement;
-  if (wrap?.getAttribute('role') === 'progressbar') {
-    wrap.setAttribute('aria-valuemin', '0');
-    wrap.setAttribute('aria-valuemax', String(goal));
-    wrap.setAttribute('aria-valuenow', String(Math.round(value)));
-  }
+  const width = Number(bar.dataset.width) || 20;
+  const pct = goal > 0 ? Math.round(value / goal * 100) : 0;
+  bar.textContent = asciiBar(value, goal, width) + (percent ? ` ${pct}%` : '');
+  bar.classList.toggle('over', goal > 0 && value > goal);
+  bar.setAttribute('aria-valuemin', '0');
+  bar.setAttribute('aria-valuemax', String(goal));
+  bar.setAttribute('aria-valuenow', String(Math.round(value)));
 }

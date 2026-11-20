@@ -4,20 +4,35 @@ import { todayStr, fromStr, uid } from './util.js';
 import { PRESET_FOODS } from './presets.js';
 import { $, $$, toast, initModals } from './ui/dom.js';
 import { register, render } from './ui/render.js';
+import { renderHeader } from './ui/header.js';
 import { initToday } from './ui/today.js';
-import { initFoods } from './ui/foods.js';
-import { initWorkouts } from './ui/workouts.js';
+import { initFoods, openLogFood, openCreateFood } from './ui/foods.js';
+import { initWorkouts, openExerciseModal } from './ui/workouts.js';
 import { initSettings, maybeRemindBackup } from './ui/settings.js';
 import { initScan } from './ui/scan.js';
 
 const TABS = ['today', 'foods', 'workouts'];
 const TAB_VIEWS = { today: ['today', 'water', 'habits'], foods: ['foods'], workouts: ['workouts'] };
 
-// Die Datumsnavigation gehört zu "Heute" und "Workouts", nicht zu "Lebensmittel".
 function renderCurrent() {
-  $('#dateNav').style.display = db.state.tab === 'foods' ? 'none' : 'flex';
+  renderHeader();
   render(...TAB_VIEWS[db.state.tab]);
 }
+
+// Mahlzeit nach Uhrzeit vorschlagen
+function mealForNow(h = new Date().getHours()) {
+  if (h >= 4 && h < 11) return 'breakfast';
+  if (h >= 11 && h < 16) return 'lunch';
+  if (h >= 17 && h < 22) return 'dinner';
+  return 'snack';
+}
+
+// Roter +-Button: tut je nach Tab das Naheliegende
+const FAB_ACTIONS = {
+  today:    { label: 'Lebensmittel eintragen', run: () => openLogFood(mealForNow()) },
+  foods:    { label: 'Neues Lebensmittel anlegen', run: openCreateFood },
+  workouts: { label: 'Übung hinzufügen', run: openExerciseModal }
+};
 
 function showTab(tab) {
   db.state.tab = tab;
@@ -27,7 +42,9 @@ function showTab(tab) {
     if (active) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   });
   $$('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + tab));
+  $('#fab').setAttribute('aria-label', FAB_ACTIONS[tab].label);
   renderCurrent();
+  window.scrollTo(0, 0);
 }
 
 function shiftDay(delta) {
@@ -40,6 +57,7 @@ function shiftDay(delta) {
 
 function initNavigation() {
   $$('nav.bottom button').forEach(b => b.addEventListener('click', () => { showTab(b.dataset.tab); save('state'); }));
+  $('#fab').addEventListener('click', () => FAB_ACTIONS[db.state.tab].run());
   $('#prevDay').addEventListener('click', () => shiftDay(-1));
   $('#nextDay').addEventListener('click', () => shiftDay(1));
 

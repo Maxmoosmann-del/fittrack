@@ -16,9 +16,11 @@ function foodMeta(f) {
 function renderFoods() {
   const q = $('#foodSearch').value.trim().toLowerCase();
   const list = db.foods.filter(f => !q || f.name.toLowerCase().includes(q)).sort(byName);
+  $('#foodCount').textContent = db.foods.length;
+  $('#foodsMeta').textContent = q ? `${list.length} Treffer` : String(list.length);
   if (list.length === 0) {
     $('#foodsList').replaceChildren(el('div', { class: 'empty', html: q
-      ? 'Keine Treffer.' : 'Noch keine Lebensmittel. Tippe oben auf <b>+</b>.' }));
+      ? 'Keine Treffer. Mit <b>+</b> legst du es neu an.' : 'Noch keine Lebensmittel. Tippe auf <b>+</b>.' }));
     return;
   }
   $('#foodsList').replaceChildren(...list.map(f => el('div', { class: 'food-row' },
@@ -211,7 +213,6 @@ function deleteLogEntry() {
 }
 
 export function initFoods() {
-  $('#addFoodBtn').addEventListener('click', openCreateFood);
   $('#cancelFood').addEventListener('click', () => closeModal('foodModal'));
   $('#saveFood').addEventListener('click', saveFood);
   $('#deleteFood').addEventListener('click', deleteFood);
