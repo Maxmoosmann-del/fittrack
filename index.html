@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FitTrack">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+<title>FitTrack</title>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">F</div>
+    <h1>FitTrack</h1>
+  </div>
+  <button class="icon-btn" id="scanBtn" aria-label="Mahlzeit scannen">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+  </button>
+  <button class="icon-btn" id="settingsBtn" aria-label="Einstellungen">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
+</header>
+
+<div class="install" id="installBanner">
+  <span>Installiere FitTrack als App auf deinem Smartphone</span>
+  <button id="installBtn">Installieren</button>
+</div>
+
+<div class="date-nav" id="dateNav" style="display:none">
+  <button id="prevDay" aria-label="Vorheriger Tag">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+  <div style="text-align:center">
+    <div class="date-label" id="dateLabel"></div>
+    <div class="date-sub" id="dateSub"></div>
+  </div>
+  <button id="nextDay" aria-label="Nächster Tag">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+</div>
+
+<main>
+  <!-- TODAY -->
+  <section class="page active" id="page-today" aria-label="Heute">
+    <div class="card">
+      <div class="row between" style="align-items:flex-end">
+        <div>
+          <div style="color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px">Kalorien</div>
+          <div class="kcal-big">
+            <span class="num" id="kcalNum">0</span>
+            <span class="of">von <span id="kcalGoal">2200</span> kcal</span>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="color:var(--muted);font-size:12px">Übrig</div>
+          <div style="font-size:20px;font-weight:700" id="kcalLeft">2200</div>
+        </div>
+      </div>
+      <div class="kcal-bar" role="progressbar" aria-label="Kalorien Fortschritt"><span id="kcalBar" style="width:0%"></span></div>
+      <div id="cardioBurnedRow" style="display:none;margin-top:8px;font-size:12px;color:var(--green);align-items:center;gap:4px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--green)" stroke="none"><path d="M12 2C8 8 4 12 4 16a8 8 0 0 0 16 0c0-4-4-8-8-14z"/></svg>
+        <span id="cardioBurnedText"></span>
+      </div>
+      <div class="macros">
+        <div class="macro protein">
+          <div class="label">Protein</div>
+          <div class="val"><span id="proteinNum">0</span><span style="font-size:13px;color:var(--muted)">g</span></div>
+          <div class="goal">Ziel: <span id="proteinGoal">150</span>g</div>
+          <div class="bar" role="progressbar" aria-label="Protein Fortschritt"><span id="proteinBar" style="width:0%"></span></div>
+        </div>
+        <div class="macro carbs">
+          <div class="label">Kohlenh.</div>
+          <div class="val"><span id="carbsNum">0</span><span style="font-size:13px;color:var(--muted)">g</span></div>
+          <div class="goal">Ziel: <span id="carbsGoal">250</span>g</div>
+          <div class="bar" role="progressbar" aria-label="Kohlenhydrate Fortschritt"><span id="carbsBar" style="width:0%"></span></div>
+        </div>
+        <div class="macro fat">
+          <div class="label">Fett</div>
+          <div class="val"><span id="fatNum">0</span><span style="font-size:13px;color:var(--muted)">g</span></div>
+          <div class="goal">Ziel: <span id="fatGoal">70</span>g</div>
+          <div class="bar" role="progressbar" aria-label="Fett Fortschritt"><span id="fatBar" style="width:0%"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Water Tracker -->
+    <div class="card" style="margin-top:12px">
+      <div class="row between" style="margin-bottom:10px">
+        <div style="font-weight:700;font-size:15px">💧 Wasser</div>
+      </div>
+      <div id="waterTracker"></div>
+    </div>
+
+    <!-- Habit Tracker -->
+    <div class="card" style="margin-top:12px" id="habitCard">
+      <div class="row between" style="margin-bottom:10px">
+        <div style="font-weight:700;font-size:15px">✅ Gewohnheiten</div>
+      </div>
+      <div id="habitTracker"></div>
+    </div>
+
+    <div id="meals"></div>
+  </section>
+
+  <!-- FOODS -->
+  <section class="page" id="page-foods" aria-label="Lebensmittel">
+    <div class="card">
+      <div class="row between">
+        <h2 style="margin:0;font-size:18px">Eigene Lebensmittel</h2>
+        <div class="row" style="gap:6px">
+          <button class="icon-btn" id="barcodeFoodsBtn" aria-label="Barcode scannen">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="4" height="16"/><rect x="7" y="4" width="2" height="16"/><rect x="11" y="4" width="3" height="16"/><rect x="16" y="4" width="2" height="16"/><rect x="20" y="4" width="3" height="16"/></svg>
+          </button>
+          <button class="icon-btn" id="addFoodBtn" aria-label="Neues Lebensmittel anlegen">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+      <input type="search" id="foodSearch" placeholder="Suchen..." aria-label="Lebensmittel suchen" style="margin-top:12px">
+    </div>
+    <div class="section-title">Deine Liste</div>
+    <div id="foodsList"></div>
+  </section>
+
+  <!-- WORKOUTS -->
+  <section class="page" id="page-workouts" aria-label="Workouts">
+    <div class="card">
+      <div class="row between">
+        <div>
+          <div style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Heutiges Training</div>
+          <div style="font-size:18px;font-weight:700" id="todayWorkoutTitle">Workout</div>
+        </div>
+        <button class="icon-btn" id="addExerciseBtn" aria-label="Übung hinzufügen">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="exercisesList"></div>
+
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>Cardio</span>
+      <button class="icon-btn" id="addCardioBtn" aria-label="Cardio hinzufügen" style="width:32px;height:32px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    <div id="cardioList"></div>
+
+    <div class="section-title">Verlauf</div>
+    <div id="historyList"></div>
+  </section>
+</main>
+
+<nav class="bottom" aria-label="Hauptnavigation">
+  <button data-tab="today" class="active" aria-label="Heute" aria-current="page">
+    <svg viewBox="0 0 24 24"><path d="M3 12l2-2 7-7 7 7 2 2"/><path d="M5 10v10h14V10"/></svg>
+    <span>Heute</span>
+  </button>
+  <button data-tab="foods" aria-label="Lebensmittel">
+    <svg viewBox="0 0 24 24"><path d="M4 11h16"/><path d="M5 11V7a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v4"/><path d="M5 11v6a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-6"/><path d="M9 4v3"/><path d="M15 4v3"/></svg>
+    <span>Lebensmittel</span>
+  </button>
+  <button data-tab="workouts" aria-label="Workouts">
+    <svg viewBox="0 0 24 24"><path d="M2 12h2"/><path d="M20 12h2"/><path d="M5 7v10"/><path d="M19 7v10"/><path d="M8 5v14"/><path d="M16 5v14"/><path d="M8 12h8"/></svg>
+    <span>Workouts</span>
+  </button>
+</nav>
+
+<!-- ===== MODALS ===== -->
+
+<!-- Settings -->
+<div class="modal-overlay" id="settingsModal" role="dialog" aria-modal="true" aria-label="Einstellungen">
+  <div class="modal">
+    <div class="grab" aria-hidden="true"></div>
+    <h2>Tagesziele</h2>
+    <p class="muted" style="margin:0 0 8px;font-size:13px">Stelle deine täglichen Ziele ein.</p>
+    <div class="field"><label for="goalKcal">Kalorien (kcal)</label><input type="number" id="goalKcal" inputmode="numeric" min="1"></div>
+    <div class="grid-3">
+      <div class="field"><label for="goalProtein">Protein (g)</label><input type="number" id="goalProtein" inputmode="numeric" min="1"></div>
+      <div class="field"><label for="goalCarbs">Kohlenh. (g)</label><input type="number" id="goalCarbs" inputmode="numeric" min="1"></div>
+      <div class="field"><label for="goalFat">Fett (g)</label><input type="number" id="goalFat" inputmode="numeric" min="1"></div>
+    </div>
+    <hr class="sep">
+    <div style="font-size:13px;color:var(--muted);margin-bottom:6px">Cardio</div>
+    <div class="grid-2">
+      <div class="field"><label for="bodyWeight">Körpergewicht (kg)</label><input type="number" id="bodyWeight" inputmode="decimal" min="20" max="300" placeholder="75"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+      <input type="checkbox" id="cardioAddToBudget" style="width:18px;height:18px;accent-color:var(--accent);flex-shrink:0">
+      <label for="cardioAddToBudget" style="font-size:13px;color:var(--text);text-transform:none;letter-spacing:0;margin:0">Verbrannte Kalorien auf Kalorienbedarf anrechnen</label>
+    </div>
+    <hr class="sep">
+    <div style="font-size:13px;color:var(--muted);margin-bottom:6px">Wasser-Tracker</div>
+    <div class="grid-2">
+      <div class="field"><label for="waterGoalInput">Tagesziel (Gläser)</label><input type="number" id="waterGoalInput" inputmode="numeric" min="1" max="20" placeholder="8"></div>
+      <div class="field"><label for="waterGlassSizeInput">Glasgröße (ml)</label><input type="number" id="waterGlassSizeInput" inputmode="numeric" min="50" max="1000" placeholder="250"></div>
+    </div>
+    <hr class="sep">
+    <div style="font-size:13px;color:var(--muted);margin-bottom:6px">Gewohnheiten (bis zu 3)</div>
+    <div class="field"><label for="habitInput1">Gewohnheit 1</label><input type="text" id="habitInput1" placeholder="z. B. Kreatin genommen" maxlength="50"></div>
+    <div class="field"><label for="habitInput2">Gewohnheit 2</label><input type="text" id="habitInput2" placeholder="z. B. Beim ersten Klingeln aufstehen" maxlength="50"></div>
+    <div class="field"><label for="habitInput3">Gewohnheit 3</label><input type="text" id="habitInput3" placeholder="z. B. 10 Min. stretchen" maxlength="50"></div>
+    <hr class="sep">
+    <div style="font-size:13px;color:var(--muted);margin-bottom:6px">KI-Scanner</div>
+    <div class="field">
+      <label for="geminiKey">Gemini API-Key</label>
+      <input type="password" id="geminiKey" placeholder="AIza..." autocomplete="off">
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:4px">Kostenlos holen: aistudio.google.com/app/apikey</div>
+    <hr class="sep">
+    <div style="font-size:13px;color:var(--muted);margin-bottom:6px">Daten</div>
+    <div class="btn-row">
+      <button class="btn secondary" id="exportData">Exportieren</button>
+      <button class="btn secondary" id="importData">Importieren</button>
+    </div>
+    <button class="btn danger" id="resetData" style="width:100%;margin-top:8px">Alle Daten löschen</button>
+    <div class="btn-row">
+      <button class="btn primary" id="saveGoals">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Food (to log) -->
+<div class="modal-overlay" id="logFoodModal" role="dialog" aria-modal="true" aria-label="Mahlzeit hinzufügen">
+  <div class="modal">
+    <div class="grab" aria-hidden="true"></div>
+    <h2 id="logFoodTitle">Mahlzeit hinzufügen</h2>
+    <input type="search" id="logFoodSearch" placeholder="Lebensmittel suchen..." aria-label="Lebensmittel suchen" style="margin-top:10px">
+    <div class="search-list" id="logFoodResults"></div>
+    <hr class="sep">
+    <div class="btn-row">
+      <button class="btn secondary" id="openCreateFood">Manuell anlegen</button>
+      <button class="btn secondary" id="barcodeFoodLogBtn" style="gap:6px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="4" height="16"/><rect x="7" y="4" width="2" height="16"/><rect x="11" y="4" width="3" height="16"/><rect x="16" y="4" width="2" height="16"/><rect x="20" y="4" width="3" height="16"/></svg>
+        Barcode
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Portion -->
+<div class="modal-overlay" id="portionModal" role="dialog" aria-modal="true" aria-label="Portion eingeben">
+  <div class="modal">
+    <div class="grab" aria-hidden="true"></div>
+    <h2 id="portionFoodName">Portion</h2>
+    <div class="muted" id="portionFoodMacros" style="font-size:13px;margin-top:2px"></div>
+
+    <div class="tab-pills" style="margin-top:12px">
+      <button id="portionTabGrams" class="active" type="button">Gramm</button>
+      <button id="portionTabPortions" type="button">Portionen</button>
+    </div>
+
+    <div id="portionGramsArea" class="field">
+      <label for="portionGrams">Menge (g)</label>
+      <input type="number" id="portionGrams" inputmode="decimal" value="100" min="1">
+    </div>
+    <div id="portionPortionsArea" style="display:none">
+      <div class="grid-2" style="margin-top:12px">
+        <div class="field"><label for="portionCount">Anzahl Portionen</label><input type="number" id="portionCount" inputmode="decimal" value="1" step="0.5" min="0.5"></div>
+        <div class="field"><label for="portionSize">1 Portion = (g)</label><input type="number" id="portionSize" inputmode="decimal" value="100" min="1"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px" aria-live="polite">
+      <div class="row between"><span class="muted">Kalorien</span><b id="portionKcal">0</b></div>
+      <div class="row between" style="margin-top:6px"><span class="muted">Protein</span><span id="portionProtein">0g</span></div>
+      <div class="row between" style="margin-top:6px"><span class="muted">Kohlenhydrate</span><span id="portionCarbs">0g</span></div>
+      <div class="row between" style="margin-top:6px"><span class="muted">Fett</span><span id="portionFat">0g</span></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn secondary" id="cancelPortion">Abbrechen</button>
+      <button class="btn primary" id="confirmPortion">Hinzufügen</button>
+    </div>
+    <button class="btn danger" id="deleteLogEntry" style="width:100%;margin-top:8px;display:none">Eintrag löschen</button>
+  </div>
+</div>
+
+<!-- Create / Edit Food -->
+<div class="modal-overlay" id="foodModal" role="dialog" aria-modal="true" aria-labelledby="foodModalTitle">
+  <div class="modal">
+    <div class="grab" aria-hidden="true"></div>
+    <h2 id="foodModalTitle">Neues Lebensmittel</h2>
+    <p class="muted" style="margin:0;font-size:13px">Werte pro 100 g</p>
+    <div class="field"><label for="foodName">Name</label><input type="text" id="foodName" placeholder="z.B. Magerquark" autocomplete="off"></div>
+    <div class="grid-2">
+      <div class="field"><label for="foodKcal">Kalorien (pro 100g)</label><input type="number" id="foodKcal" inputmode="decimal" min="0"></div>
+      <div class="field"><label for="foodProtein">Protein (g)</label><input type="number" id="foodProtein" inputmode="decimal" min="0"></div>
+    </div>
+    <div class="grid-2">
+      <div class="field"><label for="foodCarbs">Kohlenhydrate (g)</label><input type="number" id="foodCarbs" inputmode="decimal" min="0"></div>
+      <div class="field"><label for="foodFat">Fett (g)</label><input type="number" id="foodFat" inputmode="decimal" min="0"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn secondary" id="cancelFood">Abbrechen</button>
+      <button class="btn primary" id="saveFood">Speichern</button>
+    </div>
+    <button class="btn danger" id="deleteFood" style="width:100%;margin-top:8px;display:none">Löschen</button>
+  </div>
+</div>
+
+<!-- Add Exercise -->
+<div class="modal-overlay" id="exerciseModal" role="dialog" aria-modal="true" aria-label="Übung hinzufügen">
+  <div class="modal">
+    <div class="grab" aria-hidden="true"></div>
+    <h2>Übung hinzufügen</h2>
+    <div class="field">
+      <label for="exerciseName">Übung / Maschine</label>
+      <input type="text" id="exerciseName" list="exerciseHints" placeholder="z.B. Beinpresse, Bankdrücken" autocomplete="off">
+      <datalist id="exerciseHints"></datalist>
+    </div>
+    <div id="lastExerciseInfo" style="display:none;margin-top:8px;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:12px;font-size:13px;color:var(--muted)">
+      Letztes Mal: <span id="lastExerciseValues" style="color:var(--text);font-weight:600"></span>
+    </div>
+    <div class="grid-2" style="margin-top:4px">
+      <div class="field"><label for="exerciseWeight">Gewicht (kg)</label><input type="number" id="exerciseWeight" inputmode="decimal" placeholder="0" min="0"></div>
+      <div class="field"><label for="exerciseReps">Wiederholungen</label><input type="number" id="exerciseReps" inputmode="numeric" placeholder="0" min="0"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn secondary" id="cancelExercise">Abbrechen</button>
+      <button class="btn primary" id="confirmExercise">Hinzufügen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Barcode Modal -->
+<div class="modal-overlay" id="barcodeModal" role="dialog" aria-modal="true" aria-label="Barcode scannen">
+  <div class="modal">
+    <div class="grab" aria-hidden="true"></div>
+    <h2>Barcode scannen</h2>
+
+    <!-- Camera viewfinder -->
+    <div id="barcodeViewfinder" style="display:none;position:relative;border-radius:12px;overflow:hidden;background:#000;aspect-ratio:4/3;margin-bottom:12px">
+      <video id="barcodeVideo" style="width:100%;height:100%;object-fit:cover" autoplay playsinline muted></video>
+      <div class="scan-overlay">
+        <div class="scan-frame"></div>
+        <div class="scan-line"></div>
+      </div>
+    </div>
+    <p id="barcodeHint" style="display:none;text-align:center;font-size:13px;color:var(--muted);margin:0 0 12px">Barcode in den Rahmen halten</p>
+
+    <!-- Manual fallback (no BarcodeDetector) -->
+    <div id="barcodeManual" style="display:none">
+      <p class="muted" style="font-size:13px;margin:0 0 10px">Barcode-Nummer manuell eingeben oder Nährwerttabelle fotografieren:</p>
+      <div class="row" style="gap:8px">
+        <input type="number" id="barcodeManualInput" inputmode="numeric" placeholder="Barcode-Nummer (EAN)" style="flex:1">
+        <button class="btn primary" id="barcodeManualSearch" style="flex:0;padding:12px 14px;white-space:nowrap">Suchen</button>
+      </div>
+      <hr class="sep">
+      <label for="barcodeLabelFile" class="btn secondary" style="display:flex;cursor:pointer;gap:8px;margin-top:4px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Nährwerttabelle fotografieren (KI)
+      </label>
+      <input type="file" id="barcodeLabelFile" accept="image/*" style="display:none">
+    </div>
+
+    <!-- Loading -->
+    <div id="barcodeLoading" style="display:none;text-align:center;padding:24px 0">
+      <div class="spinner"></div>
+      <div style="color:var(--muted);font-size:13px;margin-top:10px" id="barcodeLoadingText">Produkt wird gesucht…</div>
+    </div>
+
+    <!-- Result -->
+    <div id="barcodeResult" style="display:none">
+      <div class="field"><label for="barcodeProductName">Name</label><input type="text" id="barcodeProductName"></div>
+      <div class="grid-2">
+        <div class="field"><label for="barcodeKcal">Kalorien (pro 100g)</label><input type="number" id="barcodeKcal" inputmode="decimal"></div>
+        <div class="field"><label for="barcodeProtein">Protein (g)</label><input type="number" id="barcodeProtein" inputmode="decimal"></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label for="barcodeCarbs">Kohlenhydrate (g)</label><input type="number" id="barcodeCarbs" inputmode="decimal"></div>
+        <div class="field"><label for="barcodeFat">Fett (g)</label><input type="number" id="barcodeFat" inputmode="decimal"></div>
+      </div>
+      <p class="muted" style="font-size:11px;margin:4px 0 0">Alle Werte pro 100 g</p>
+      <div class="btn-row">
+        <button class="btn secondary" id="barcodeScanAgain">Nochmal</button>
+        <button class="btn primary" id="barcodeConfirm">Hinzufügen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cardio Modal -->
+<div class="modal-overlay" id="cardioModal" role="dialog" aria-modal="true" aria-label="Cardio hinzufügen">
+  <div class="modal">
+    <div class="grab" aria-hidden="true"></div>
+    <h2>Cardio hinzufügen</h2>
+    <div class="field">
+      <label for="cardioSelect">Aktivität</label>
+      <select id="cardioSelect"></select>
+    </div>
+    <div class="field" id="cardioCustomNameField" style="display:none">
+      <label for="cardioCustomName">Eigener Name</label>
+      <input type="text" id="cardioCustomName" placeholder="z.B. Tanzen">
+    </div>
+    <div class="field">
+      <label for="cardioDuration">Dauer (Minuten)</label>
+      <input type="number" id="cardioDuration" inputmode="numeric" value="30" min="1">
+    </div>
+    <div style="margin-top:10px;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px">
+      <div class="row between">
+        <span class="muted" style="font-size:13px">Geschätzte Kalorien</span>
+        <b id="cardioKcalEst" style="color:var(--green);font-size:18px">0 kcal</b>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Basierend auf deinem Körpergewicht</div>
+    </div>
+    <div class="field" style="margin-top:10px">
+      <label for="cardioKcalOverride">Kalorien manuell eingeben (optional)</label>
+      <input type="number" id="cardioKcalOverride" inputmode="numeric" placeholder="Leer = Schätzung verwenden">
+    </div>
+    <div class="btn-row">
+      <button class="btn secondary" id="cancelCardio">Abbrechen</button>
+      <button class="btn primary" id="confirmCardio">Hinzufügen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scan Modal -->
+<div class="modal-overlay" id="scanModal" role="dialog" aria-modal="true" aria-label="Mahlzeit scannen">
+  <div class="modal">
+    <div class="grab" aria-hidden="true"></div>
+    <h2>KI-Kalorien Scanner</h2>
+    <p class="muted" style="margin:0 0 14px;font-size:13px">Fotografiere deine Mahlzeit – die KI schätzt Kalorien und Makros</p>
+
+    <img id="scanPreview" style="display:none;width:100%;max-height:200px;object-fit:cover;border-radius:12px;margin-bottom:12px" alt="Vorschau">
+
+    <div id="scanUploadArea">
+      <label for="scanFile" class="btn secondary" style="display:flex;cursor:pointer;gap:8px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Foto aufnehmen / hochladen
+      </label>
+      <input type="file" id="scanFile" accept="image/*" style="display:none">
+    </div>
+
+    <button class="btn primary" id="scanAnalyse" style="display:none;width:100%;margin-top:10px">Analysieren</button>
+
+    <div id="scanLoading" style="display:none;text-align:center;padding:28px 0">
+      <div class="spinner"></div>
+      <div style="color:var(--muted);font-size:13px;margin-top:12px">KI analysiert deine Mahlzeit…</div>
+    </div>
+
+    <div id="scanResults" style="display:none">
+      <div class="field"><label for="scanName">Name</label><input type="text" id="scanName"></div>
+      <div class="grid-2">
+        <div class="field"><label for="scanKcal">Kalorien (kcal)</label><input type="number" id="scanKcal" inputmode="numeric"></div>
+        <div class="field"><label for="scanGrams">Portion (g)</label><input type="number" id="scanGrams" inputmode="numeric"></div>
+      </div>
+      <div class="grid-3">
+        <div class="field"><label for="scanProtein">Protein (g)</label><input type="number" id="scanProtein" inputmode="decimal"></div>
+        <div class="field"><label for="scanCarbs">Kohlenh. (g)</label><input type="number" id="scanCarbs" inputmode="decimal"></div>
+        <div class="field"><label for="scanFat">Fett (g)</label><input type="number" id="scanFat" inputmode="decimal"></div>
+      </div>
+      <div class="field">
+        <label for="scanMealSelect">Zu Mahlzeit hinzufügen</label>
+        <select id="scanMealSelect">
+          <option value="breakfast">Frühstück</option>
+          <option value="lunch">Mittagessen</option>
+          <option value="dinner">Abendessen</option>
+          <option value="snack">Snacks</option>
+        </select>
+      </div>
+      <p class="muted" style="font-size:11px;margin:6px 0 0">KI-Schätzungen können ungenau sein – prüfe die Werte kurz.</p>
+      <div class="btn-row">
+        <button class="btn secondary" id="scanReset">Neues Foto</button>
+        <button class="btn primary" id="scanConfirm">Hinzufügen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="importFile" accept="application/json" style="display:none" aria-hidden="true">
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
