@@ -274,5 +274,5 @@ hr.sep{border:0;border-top:1px dashed var(--line-2);margin:16px 0}
 .hint a{color:var(--red)}
 
 /* Update-Hinweis wie in der Aufgaben-App: fester Balken unter der Kopfzeile */
-.update-banner{display:block;width:calc(100% - 32px);margin:12px 16px 0;padding:12px;border:1px solid var(--red);color:var(--red);text-shadow:var(--glow);font-size:12px;letter-spacing:.24em;text-transform:uppercase;text-align:center;background:var(--scan),var(--red-deep);animation:pulse 2s steps(2) infinite}
+.update-banner{display:block;width:calc(100% - 32px);margin:12px 16px 0;padding:12px;border:1px solid var(--red);color:var(--red);text-shadow:var(--glow);font-size:12px;letter-spacing:.2em;white-space:nowrap;text-transform:uppercase;text-align:center;background:var(--scan),var(--red-deep);animation:pulse 2s steps(2) infinite}
 .update-banner:active{background:var(--scan),var(--red);color:var(--bg);text-shadow:none}
