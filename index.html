@@ -38,6 +38,8 @@
   <div class="hazard" aria-hidden="true"></div>
 </header>
 
+<button class="update-banner" id="updateBanner" type="button" hidden>Update verfügbar · tippen zum Laden</button>
+
 <div class="install" id="installBanner">
   <span>FitTrack als App installieren</span>
   <button id="installBtn" type="button">Installieren</button>
@@ -155,6 +157,10 @@
       <button class="btn secondary" id="exportData">Exportieren</button>
       <button class="btn secondary" id="importData">Importieren</button>
     </div>
+    <div class="btn-row">
+      <button class="btn secondary" id="checkUpdate" type="button">Nach Update suchen</button>
+    </div>
+    <div class="hint" id="appVersion"></div>
     <button class="btn danger" id="resetData" style="width:100%;margin-top:8px">Alle Daten löschen</button>
     <div class="hint" style="margin-top:12px">Produktkatalog und Barcode-Daten: © <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener">Open Food Facts</a> contributors, Lizenz <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener">ODbL</a>. Werte können fehlerhaft sein – bei Zweifel Verpackung prüfen.</div>
     <div class="btn-row">

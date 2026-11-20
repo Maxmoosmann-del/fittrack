@@ -50,7 +50,17 @@ export async function searchOnline(query) {
     sort_by: 'unique_scans_n', tagtype_0: 'countries', tag_contains_0: 'contains', tag_0: 'germany',
     fields: 'code,product_name_de,product_name,brands,stores_tags,nutriments'
   });
-  const res = await fetchWithTimeout(`https://world.openfoodfacts.org/cgi/search.pl?${params}`, {}, 25000);
+  const url = `https://world.openfoodfacts.org/cgi/search.pl?${params}`;
+  let res;
+  // Ist OFF überlastet, fehlt der Fehlerantwort der CORS-Header und fetch wirft nur
+  // "Failed to fetch". Einmal kurz warten und erneut versuchen, dann klar melden.
+  for (let attempt = 1; ; attempt++) {
+    try { res = await fetchWithTimeout(url, {}, 25000); break; }
+    catch (err) {
+      if (attempt >= 2) throw new Error(/Zeitüberschreitung/.test(err.message) ? err.message : 'Open Food Facts nicht erreichbar – gleich nochmal versuchen');
+      await new Promise(r => setTimeout(r, 1500));
+    }
+  }
   if (res.status === 429) throw new Error('Zu viele Suchen – kurz warten');
   if (res.status >= 500) throw new Error('Open Food Facts gerade überlastet');
   if (!res.ok) throw new Error('Open Food Facts nicht erreichbar');

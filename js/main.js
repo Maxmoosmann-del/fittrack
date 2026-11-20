@@ -10,6 +10,7 @@ import { initFoods, openLogFood, openCreateFood } from './ui/foods.js';
 import { initWorkouts, openExerciseModal } from './ui/workouts.js';
 import { initSettings, maybeRemindBackup } from './ui/settings.js';
 import { initScan } from './ui/scan.js';
+import { initUpdates } from './ui/update.js';
 
 const TABS = ['today', 'foods', 'workouts'];
 const TAB_VIEWS = { today: ['today', 'water', 'habits'], foods: ['foods'], workouts: ['workouts'] };
@@ -88,16 +89,9 @@ function initPwa() {
   });
   window.addEventListener('appinstalled', () => $('#installBanner').classList.remove('show'));
 
-  // Lokal (npm run serve) ohne Service Worker – sonst sieht man Änderungen erst
+  // Lokal (npm run serve) läuft kein Service Worker – sonst sieht man Änderungen erst
   // nach dem Hochzählen von CACHE.
-  const isDev = ['localhost', '127.0.0.1'].includes(location.hostname);
-  if ('serviceWorker' in navigator && !isDev) {
-    const hadController = !!navigator.serviceWorker.controller;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (hadController) toast('Update verfügbar', () => location.reload(), { label: 'Neu laden', duration: 15000 });
-    });
-    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
-  }
+  initUpdates();
   // Browser bitten, die Daten nicht bei Speicherknappheit zu löschen.
   navigator.storage?.persist?.().catch(() => {});
 }

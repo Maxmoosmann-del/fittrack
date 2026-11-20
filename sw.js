@@ -1,5 +1,5 @@
 /* FitTrack Service Worker – offline cache */
-const CACHE = 'fittrack-v9';
+const CACHE = 'fittrack-v10';
 const ASSETS = [
   './',
   './index.html',
@@ -27,7 +27,8 @@ const ASSETS = [
   './js/ui/foods.js',
   './js/ui/workouts.js',
   './js/ui/settings.js',
-  './js/ui/scan.js'
+  './js/ui/scan.js',
+  './js/ui/update.js'
 ];
 
 // Updates kommen über eine neue CACHE-Version: Dann lädt der Browser diese Datei neu,

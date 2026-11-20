@@ -5,6 +5,7 @@ import { pruneHabitLog, MAX_HABITS } from '../habits.js';
 import { buildBackup, sanitizeBackup } from '../backup.js';
 import { $, toast, showFieldError, openModal, closeModal } from './dom.js';
 import { render } from './render.js';
+import { currentVersion, onCheckUpdateClick } from './update.js';
 
 const habitInput = i => $('#habitInput' + (i + 1));
 
@@ -40,6 +41,8 @@ export function openSettings() {
     habitInput(i).dataset.habitId = h ? h.id : '';
   }
   renderLastBackup();
+  $('#appVersion').textContent = 'Installierte Version: …';
+  currentVersion().then(v => { $('#appVersion').textContent = `Installierte Version: ${v ?? 'Entwicklung (ohne Cache)'}`; });
   openModal('settingsModal');
 }
 
@@ -140,6 +143,7 @@ export function initSettings() {
   }
   $('#saveGoals').addEventListener('click', saveSettings);
   $('#exportData').addEventListener('click', exportBackup);
+  $('#checkUpdate').addEventListener('click', e => onCheckUpdateClick(e.currentTarget));
   $('#importData').addEventListener('click', () => $('#importFile').click());
   $('#importFile').addEventListener('change', importBackup);
   $('#resetData').addEventListener('click', () => {
