@@ -214,9 +214,14 @@
       <label for="geminiKey">Gemini API-Key</label>
       <input type="password" id="geminiKey" placeholder="AIza..." autocomplete="off">
     </div>
-    <div style="font-size:11px;color:var(--muted);margin-top:4px">Kostenlos holen: aistudio.google.com/app/apikey</div>
+    <div class="field">
+      <label for="geminiModel">Gemini-Modell</label>
+      <input type="text" id="geminiModel" placeholder="gemini-flash-latest" autocomplete="off" spellcheck="false">
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:4px">Kostenlos holen: aistudio.google.com/app/apikey · Modell nur ändern, wenn Google es abschaltet.</div>
     <hr class="sep">
     <div style="font-size:13px;color:var(--muted);margin-bottom:6px">Daten</div>
+    <div id="lastBackupInfo" style="font-size:12px;color:var(--muted);margin-bottom:8px"></div>
     <div class="btn-row">
       <button class="btn secondary" id="exportData">Exportieren</button>
       <button class="btn secondary" id="importData">Importieren</button>
@@ -478,6 +483,6 @@
 <input type="file" id="importFile" accept="application/json" style="display:none" aria-hidden="true">
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="script.js"></script>
+<script type="module" src="js/main.js"></script>
 </body>
 </html>
