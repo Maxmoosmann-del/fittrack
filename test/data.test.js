@@ -177,3 +177,22 @@ test('Review 3: alte Einträge nach gesetzter Version werden trotzdem migriert',
   assert.ok(db.log['2026-11-01'][0].id);
   assert.equal(db.log['2026-11-01'][0].kcal, 130);
 });
+
+test('Backup v1 aus der allerersten App-Version (Handy) wird vollständig übernommen', () => {
+  const v1 = {
+    goals: { kcal: 2400, protein: 160, carbs: 260, fat: 75 },
+    foods: OLD_FOODS,
+    log: { '2026-05-12': [{ foodId: 'f1', grams: 180, meal: 'dinner' }] },
+    workouts: { '2026-05-12': [{ exercise: 'Bankdrücken', sets: [{ weight: 70, reps: 10 }] }] },
+    exerciseNames: ['Bankdrücken'],
+    exportedAt: '2026-05-12T18:00:00.000Z', v: 1
+  };
+  const back = sanitizeBackup(JSON.parse(JSON.stringify(v1)), defaults());
+  assert.deepEqual(back.goals, v1.goals);
+  const e = back.log['2026-05-12'][0];
+  assert.equal(e.name, 'Reis'); assert.equal(e.kcal, 130); assert.equal(e.grams, 180); assert.ok(e.id);
+  assert.equal(back.workouts['2026-05-12'][0].sets[0].weight, 70);
+  assert.ok(back.workouts['2026-05-12'][0].id);
+  assert.deepEqual(back.exerciseNames, ['Bankdrücken']);
+  assert.equal(back.water, undefined);          // gab es damals nicht – bleibt unangetastet
+});
