@@ -46,8 +46,10 @@ Die Dateien in `js/` (außer `ui/`) kennen kein DOM und laufen deshalb auch in N
 ## Updates ausliefern
 
 Beim Ändern von Dateien in `sw.js` die Konstante `CACHE` hochzählen und neue Dateien in
-`ASSETS` eintragen. Der Service Worker lädt App-Dateien zuerst aus dem Netz (max. 2,5 s)
-und fällt sonst auf den Cache zurück.
+`ASSETS` eintragen. Der Service Worker liefert alles aus dem versionierten Cache (schneller
+Start, auch offline). Eine neue `CACHE`-Version lädt alle Dateien frisch und schaltet
+gemeinsam um, damit nie alte und neue Module gemischt werden; die App zeigt dann
+„Update verfügbar“. Lokal (`npm run serve`) ist der Service Worker abgeschaltet.
 
 ## KI-Scanner
 
