@@ -60,6 +60,12 @@
       <div class="macro-line"><span class="macro-key">P</span><span class="ascii-bar" id="proteinBar" data-width="10" role="progressbar" aria-label="Protein"></span><span><span id="proteinNum">0</span>/<span id="proteinGoal">150</span>g</span></div>
       <div class="macro-line"><span class="macro-key">K</span><span class="ascii-bar" id="carbsBar" data-width="10" role="progressbar" aria-label="Kohlenhydrate"></span><span><span id="carbsNum">0</span>/<span id="carbsGoal">250</span>g</span></div>
       <div class="macro-line"><span class="macro-key">F</span><span class="ascii-bar" id="fatBar" data-width="10" role="progressbar" aria-label="Fett"></span><span><span id="fatNum">0</span>/<span id="fatGoal">70</span>g</span></div>
+      <div class="prompt hist-head"><span>verlauf --<span id="histDaysLabel">14</span>d</span>
+        <span class="hist-range" role="group" aria-label="Zeitraum für den Verlauf">
+          <button type="button" data-days="7" aria-label="7 Tage">7</button><button type="button" data-days="14" aria-label="14 Tage">14</button><button type="button" data-days="30" aria-label="30 Tage">30</button>
+        </span>
+      </div>
+      <div class="hist" id="historyChart"></div>
     </div>
 
     <h2 class="sec">// Wasser <span class="sec-meta" id="waterMeta"></span></h2>

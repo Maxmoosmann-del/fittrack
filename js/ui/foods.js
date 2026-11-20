@@ -3,6 +3,7 @@ import { db, save, findById, removeById } from '../store.js';
 import { uid, round1, validateNonNegativeFloat } from '../util.js';
 import { MEALS, nutrientSnapshot } from '../nutrition.js';
 import { loadCatalog, searchCatalog, catalogLabel } from '../catalog.js';
+import { recentFoods, relativeDay } from '../stats.js';
 import { searchOnline } from '../api.js';
 import { $, el, ICONS, toast, showFieldError, openModal, closeModal, isModalOpen } from './dom.js';
 import { register, render } from './render.js';
@@ -174,13 +175,50 @@ export function openLogFood(meal) {
 
 export function getActiveMeal() { return activeMeal; }
 
+// ---------- Zuletzt gegessen ----------
+// Werte: aktuelles eigenes Lebensmittel (falls inzwischen korrigiert), sonst die Kopie vom letzten Mal.
+function recentAsFood(r) {
+  const own = r.foodId && db.foods.find(f => f.id === r.foodId);
+  return own || { id: r.foodId || '', name: r.name, kcal: r.kcal, protein: r.protein, carbs: r.carbs, fat: r.fat };
+}
+
+function quickAdd(r) {
+  const food = recentAsFood(r);
+  const dateKey = db.state.date;
+  const entry = { id: uid(), foodId: food.id, ...nutrientSnapshot(food), grams: r.grams, meal: activeMeal };
+  (db.log[dateKey] ||= []).push(entry);
+  save('log'); closeModal('logFoodModal'); render('today');
+  toast(`${food.name} · ${r.grams} g eingetragen`, () => { removeById(db.log, dateKey, entry.id); save('log'); render('today'); });
+}
+
+function recentSection() {
+  const recent = recentFoods(db.log, db.state.date, 10);
+  if (!recent.length) return [];
+  return [
+    el('h2', { class: 'sec' }, '// Zuletzt', el('span', { class: 'sec-meta', text: String(recent.length) })),
+    ...recent.map(r => {
+      const food = recentAsFood(r);
+      const kcal = Math.round(food.kcal * r.grams / 100);
+      return el('div', { class: 'food-row clickable', onclick: () => openPortion(food, r.grams) },
+        el('div', {},
+          el('div', { class: 'name', text: food.name }),
+          el('div', { class: 'meta', text: `${r.grams} g · ${kcal} kcal · ${relativeDay(r.date, db.state.date)}` })),
+        el('button', { class: 'quick-add', type: 'button', text: `+ ${r.grams} g`,
+                       'aria-label': `${food.name}, ${r.grams} g sofort eintragen`,
+                       onclick: ev => { ev.stopPropagation(); quickAdd(r); } }));
+    }),
+    el('h2', { class: 'sec' }, '// Deine Liste', el('span', { class: 'sec-meta', text: String(db.foods.length) }))
+  ];
+}
+
 let logRenderSeq = 0;
 function renderLogFoodResults() {
   const q = $('#logFoodSearch').value.trim().toLowerCase();
   const list = db.foods.filter(f => !q || f.name.toLowerCase().includes(q)).sort(byName);
   const box = $('#logFoodResults');
   // Ganze Zeile antippbar (auf dem Handy tippt man meist auf den Namen)
-  box.replaceChildren(...(list.length ? list.slice(0, 40).map(f => el('div', { class: 'food-row clickable', onclick: () => openPortion(f) },
+  box.replaceChildren(...(q ? [] : recentSection()),
+    ...(list.length ? list.slice(0, 40).map(f => el('div', { class: 'food-row clickable', onclick: () => openPortion(f) },
     el('div', {}, el('div', { class: 'name', text: f.name }), foodMeta(f)),
     el('button', { class: 'icon-btn', type: 'button', 'aria-label': `${f.name} auswählen`,
                    html: ICONS.chevron, onclick: ev => { ev.stopPropagation(); openPortion(f); } })))
@@ -227,10 +265,10 @@ function openPortionModal(p, grams) {
   openModal('portionModal', '#portionGrams');
 }
 
-export function openPortion(food) {
+export function openPortion(food, grams = 100) {
   closeModal('logFoodModal');
   openPortionModal({ snapshot: nutrientSnapshot(food), foodId: food.id, entryId: null,
-                     dateKey: db.state.date, meal: activeMeal }, 100);
+                     dateKey: db.state.date, meal: activeMeal }, grams);
 }
 
 // Bearbeiten nutzt die gespeicherte Kopie – klappt also auch, wenn das Lebensmittel gelöscht ist.

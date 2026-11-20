@@ -119,8 +119,44 @@ main{padding:14px 16px 96px}
 .water-reset-btn{margin-left:auto;width:36px;height:36px;color:var(--muted);font-size:17px}
 .water-reset-btn:active{color:var(--red)}
 
+/* Verlauf im Terminal */
+.hist-head{display:flex;justify-content:space-between;align-items:center}
+.hist-head::before{content:none}
+.hist-head > span:first-child::before{content:"> ";color:var(--red-hot)}
+.hist-range{display:flex;gap:4px;text-shadow:none}
+.hist-range button{min-width:34px;height:28px;padding:0 6px;border:1px solid var(--line-2);color:var(--muted);font-size:12px}
+.hist-range button.active{border-color:var(--red);color:var(--red);text-shadow:var(--glow)}
+.hist{margin-top:4px;font-size:13px}
+.hist-line{display:flex;gap:8px;align-items:baseline;line-height:1.35}
+.hist-key{width:3.2em;flex-shrink:0;color:var(--muted);text-shadow:none}
+/* Ein Gitterfeld pro Tag über die volle Breite – Spaltenzahl setzt das JS */
+.hist-spark{flex:1;display:grid;grid-template-columns:repeat(var(--days,14),1fr);letter-spacing:0;font-size:16px;line-height:1.1}
+.hist-spark span{text-align:center;overflow:hidden}
+.hist-days .hist-spark{font-size:10px}
+.hist-line .over{color:var(--red-hot)}
+.hist-line .low{color:var(--red-dim);text-shadow:none}
+.hist-line .hit{color:var(--red)}
+.hist-line .today{color:var(--text);text-shadow:0 0 6px rgba(255,255,255,.35)}
+.hist-days{color:var(--muted);font-size:10px;text-shadow:none}
+.hist-days .today{color:var(--red);text-shadow:var(--glow)}
+.hist-summary{margin-top:4px;font-size:12px;color:var(--muted);text-shadow:none}
+
+/* Wie gestern / Zuletzt */
+.repeat-btn{display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:2px;padding:10px 12px;border:1px dashed var(--line-2)}
+.repeat-btn:active{border-color:var(--red)}
+.repeat-label{color:var(--red);text-shadow:var(--glow);font-size:12px;letter-spacing:.18em;text-transform:uppercase}
+.repeat-meta{color:var(--muted);font-size:12px}
+.quick-add{flex-shrink:0;padding:7px 9px;border:1px solid var(--line-2);color:var(--red);font-size:12px;white-space:nowrap}
+.quick-add:active{background:var(--scan),var(--red);color:var(--bg)}
+
 /* Gewohnheiten */
-.habit-row{display:flex;align-items:center;gap:12px;border:1px solid var(--line);padding:8px 12px;margin-bottom:6px}
+.habit-row{border:1px solid var(--line);padding:8px 12px 10px;margin-bottom:6px}
+.habit-top{display:flex;align-items:center;gap:12px}
+.habit-strip{display:flex;gap:3px;margin:8px 0 0 36px}
+.habit-strip .sq{width:12px;height:12px;border:1px solid #5a3a42}
+.habit-strip .sq.on{border-color:var(--red);background:var(--scan),var(--red);box-shadow:0 0 4px rgba(255,42,85,.5)}
+.habit-strip .sq.today{outline:1px solid var(--text);outline-offset:1px}
+.habit-meta{margin:5px 0 0 36px;font-size:11px;color:var(--muted)}
 .habit-check{width:24px;height:24px;border:1.5px solid var(--muted);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--bg)}
 .habit-check svg{width:15px;height:15px}
 .habit-row.done .habit-check{border-color:var(--red);background:var(--scan),var(--red);box-shadow:var(--glow)}
